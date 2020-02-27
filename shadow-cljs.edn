@@ -1,0 +1,10 @@
+{:builds {:app {:asset-path "/js"
+                :modules {:main {:init-fn app.main/init}}
+                :output-dir "public/js"
+                :target :browser}}
+ :deps true
+ ;; deps true this is ignored. left here from template
+ :dependencies [[reagent "0.8.1"]]
+ :dev-http {3000 "public"}
+ :http {:port 9631}
+ :source-paths ["src"]}
