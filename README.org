@@ -1,0 +1,61 @@
+* Shadow CLJS run from deps
+
+This demonstrates a workflow that is common and included in the [[https://shadow-cljs.github.io/docs/UsersGuide.html#deps-edn][shadow-cljs-users guide]]. It presents some complications for CIDER at the moment.
+
+** The workflow
+
+This is a bog standard shadow-cljs app that is managed by deps rather than shadow-cljs. The difficulty lies in that the user or tooling is responsible for starting up shadow-cljs server.
+
+This can be accomplished by starting up the process with the shadow [[https://shadow-cljs.github.io/docs/UsersGuide.html#_embedded_nrepl_server][middleware]] included:
+
+#+BEGIN_SRC sh
+  /usr/local/bin/clojure -Sdeps '{:deps {nrepl {:mvn/version "0.6.0"} cider/piggieback {:mvn/version "0.4.2"} cider/cider-nrepl {:mvn/version "0.24.0"}}}' -m nrepl.cmdline --middleware '["cider.nrepl/cider-middleware", "cider.piggieback/wrap-cljs-repl", "shadow.cljs.devtools.server.nrepl/middleware"]'
+#+END_SRC
+
+Then from the repl we have only to start the server and then proceed as normal:
+
+#+BEGIN_SRC clojure
+  ;; Connected to nREPL server - nrepl://localhost:64852
+  ;; CIDER 0.25.0snapshot, nREPL 0.6.0
+  ;; Clojure 1.10.0, Java 1.8.0_202
+  ;;     Docs: (doc function-name)
+  ;;           (find-doc part-of-name)
+  ;;   Source: (source function-name)
+  ;;  Javadoc: (javadoc java-object-or-class)
+  ;;     Exit: <C-c C-q>
+  ;;  Results: Stored in vars *1, *2, *3, an exception in *e;
+  ;;  Startup: /usr/local/bin/clojure -Sdeps '{:deps {nrepl {:mvn/version "0.6.0"} cider/piggieback {:mvn/version "0.4.2"} cider/cider-nrepl {:mvn/version "0.24.0"}}}' -m nrepl.cmdline --middleware '["cider.nrepl/cider-middleware", "cider.piggieback/wrap-cljs-repl", "shadow.cljs.devtools.server.nrepl/middleware"]'
+  ;;
+  ;; ClojureScript REPL type: shadow
+  ;; ClojureScript REPL init form: (do (require '[shadow.cljs.devtools.api :as shadow]) (shadow/watch :app) (shadow/nrepl-select :app))
+  ;;
+  Execution error (ExceptionInfo) at shadow.cljs.devtools.server.runtime/get-instance! (runtime.clj:11).
+  missing instance
+  user>
+  user> (require '[shadow.cljs.devtools.server :as server])
+  nil
+  user> (server/start!)
+  Feb 27, 2020 8:51:37 PM org.xnio.Xnio <clinit>
+  INFO: XNIO version 3.7.3.Final
+  Feb 27, 2020 8:51:37 PM org.xnio.nio.NioXnio <clinit>
+  INFO: XNIO NIO Implementation Version 3.7.3.Final
+  Feb 27, 2020 8:51:37 PM org.jboss.threads.Version <clinit>
+  INFO: JBoss Threads version 2.3.2.Final
+  shadow-cljs - HTTP server available at http://localhost:3000
+  shadow-cljs - server version: 2.8.83 running at http://localhost:9631
+  shadow-cljs - nREPL server started on port 65233
+  :shadow.cljs.devtools.server/started
+  user> (require '[shadow.cljs.devtools.api :as shadow])
+  nil
+  user> (shadow/watch :app)
+  [:app] Configuring build.
+  [:app] Compiling ...
+  [:app] Build completed. (155 files, 1 compiled, 0 warnings, 3.77s)
+  :watching
+  user> (shadow/nrepl-select :app)
+  To quit, type: :cljs/quit
+  [:selected :app]
+  cljs.user>
+#+END_SRC
+
+The ~Execution error~ above is from the standard startup command for shadow not finding a running server. We then start it with ~(shadow.cljs.devtools.server/start!)~ and then invoke the normal startup routine to get a repl.
